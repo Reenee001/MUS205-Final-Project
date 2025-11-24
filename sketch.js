@@ -1,4 +1,7 @@
-setup () {
-    maya
+function setup () {
     //hello
+}
+
+function draw() {
+
 }
