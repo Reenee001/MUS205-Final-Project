@@ -10,6 +10,22 @@ let doorColor_livingroom;
 
 let clouds = [];
 
+// Audio variables
+let fireplaceSound;
+let christmasMusic;
+let doorOpenSound;
+
+// Interactive objects state
+let treeDecorations = [];
+let isRadioPlaying = false;
+let fireplaceState = 'off'; // 'off', 'on', 'jumpscare'
+let showJumpscare = false;
+let jumpscareTimer = 0;
+
+// Particle systems
+let fireEmbers = [];
+let sparkles = [];
+let snowflakes = [];
 
 class Cloud {
   constructor(x, y, speed) {
@@ -27,7 +43,6 @@ class Cloud {
     drawClouds(this.x + 20, this.y - 10, 10, 45);
   }
 
-
   move() {
     this.x += this.speed;
     if (this.x > width + 80) {
@@ -35,12 +50,149 @@ class Cloud {
       this.y = random(50, height / 2);
     }
   }
-
 }
 
+class Snowflake {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.speed = random(1, 3);
+    this.size = random(3, 8);
+    this.sway = random(-0.5, 0.5);
+  }
 
+  update() {
+    this.y += this.speed;
+    this.x += this.sway;
+    if (this.y > height) {
+      this.y = 0;
+      this.x = random(width);
+    }
+  }
 
+  display() {
+    fill(255, 255, 255, 200);
+    noStroke();
+    circle(this.x, this.y, this.size);
+  }
+}
 
+class FireEmber {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.speedY = random(-2, -4);
+    this.speedX = random(-1, 1);
+    this.size = random(2, 6);
+    this.life = 255;
+  }
+
+  update() {
+    this.y += this.speedY;
+    this.x += this.speedX;
+    this.life -= 5;
+    this.size *= 0.97;
+  }
+
+  display() {
+    noStroke();
+    fill(255, random(100, 200), 0, this.life);
+    circle(this.x, this.y, this.size);
+  }
+
+  isDead() {
+    return this.life <= 0;
+  }
+}
+
+class Sparkle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = random(3, 8);
+    this.life = 255;
+    this.fadeSpeed = random(5, 15);
+  }
+
+  update() {
+    this.life -= this.fadeSpeed;
+    this.size *= 0.95;
+  }
+
+  display() {
+    noStroke();
+    fill(255, 215, 0, this.life);
+    circle(this.x, this.y, this.size);
+    // Add star points
+    stroke(255, 255, 200, this.life);
+    strokeWeight(2);
+    line(this.x - this.size, this.y, this.x + this.size, this.y);
+    line(this.x, this.y - this.size, this.x, this.y + this.size);
+  }
+
+  isDead() {
+    return this.life <= 0;
+  }
+}
+
+class TreeOrnament {
+  constructor(x, y, ornamentColor, ornamentType) {
+    this.x = x;
+    this.y = y;
+    this.color = ornamentColor;
+    this.type = ornamentType; // 'ball', 'star', 'candy'
+    this.size = random(15, 25);
+  }
+
+  display() {
+    push();
+    translate(this.x, this.y);
+
+    if (this.type === 'ball') {
+      // Draw ball ornament
+      fill(this.color);
+      stroke(200);
+      strokeWeight(2);
+      circle(0, 0, this.size);
+      // Shine
+      fill(255, 255, 255, 150);
+      noStroke();
+      circle(-this.size * 0.2, -this.size * 0.2, this.size * 0.3);
+    } else if (this.type === 'star') {
+      // Draw star ornament
+      fill(this.color);
+      stroke(200);
+      strokeWeight(1);
+      this.drawStar(0, 0, this.size * 0.3, this.size * 0.6, 5);
+    } else if (this.type === 'candy') {
+      // Draw candy cane
+      stroke(this.color);
+      strokeWeight(this.size * 0.3);
+      noFill();
+      // Draw the curved top part
+      arc(0, 0, this.size, this.size, PI, TWO_PI);
+      // Draw the straight part starting from the arc's endpoint
+      line(this.size / 2, 0, this.size / 2, this.size * 1.5);
+    }
+
+    pop();
+  }
+
+  drawStar(x, y, radius1, radius2, npoints) {
+    let angle = TWO_PI / npoints;
+    let halfAngle = angle / 2.0;
+    beginShape();
+    for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
+      let sx = x + cos(a) * radius2;
+      let sy = y + sin(a) * radius2;
+      vertex(sx, sy);
+      sx = x + cos(a + halfAngle) * radius1;
+      sy = y + sin(a + halfAngle) * radius1;
+      vertex(sx, sy);
+    }
+    endShape(CLOSE);
+  }
+}
 
 // declare global var
 // to represent current page number (aka "state")
@@ -52,7 +204,7 @@ let previousPageIndex = 0;
 
 function preload() {
   // ********************
-  // "Christmas Town"
+  // Load Images
   // ********************
 
   let tempI = 0;
@@ -61,6 +213,14 @@ function preload() {
   tempI = 1;
   pageImages[tempI] = loadImage('christmas_livingroom.png');
 
+  // ********************
+  // Load Audio
+  // ********************
+  fireplaceSound = loadSound('audio/fireplace.mp3');
+  doorOpenSound = loadSound('audio/door opening.mp3');
+  // Note: You'll need to add a Christmas music file to the audio folder
+  // For now, we'll use the snow sound as ambient music
+  christmasMusic = loadSound('audio/snow.mp3');
 }
 
 function draw() {
@@ -69,9 +229,33 @@ function draw() {
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
     updateAndDrawClouds();
+    // Add snowflakes in town scene
+    updateAndDrawSnowflakes();
   }
 
+  // Living room interactive elements (scene 1)
+  if (currentPageIndex === 1) {
+    // Draw tree decorations
+    for (let ornament of treeDecorations) {
+      ornament.display();
+    }
 
+    // Draw fireplace effects
+    if (fireplaceState === 'on') {
+      updateAndDrawFireEmbers();
+    }
+
+    // Draw sparkles
+    updateAndDrawSparkles();
+
+    // Handle jumpscare
+    if (showJumpscare) {
+      displayJumpscare();
+    }
+
+    // Display interaction hints
+    displayInteractionHints();
+  }
 }
 
 function setup() {
@@ -85,6 +269,7 @@ function setup() {
   doorColor = color('#893f00');
   doorColor_livingroom = color('#5b3022');
 
+  // Initialize clouds
   for (let i = 0; i < 5; i++) {
     let xPos = random(0, width);
     let yPos = random(50, height / 2);
@@ -92,14 +277,23 @@ function setup() {
     clouds.push(new Cloud(xPos, yPos, cloudSpeed));
   }
 
+  // Initialize snowflakes
+  for (let i = 0; i < 50; i++) {
+    snowflakes.push(new Snowflake(random(width), random(height)));
+  }
 
-  // build audio objects
-//   Object.keys(pageAudioSrc).forEach(k => {
-//     const a = new Audio(pageAudioSrc[k]);
-//     a.preload = 'auto';
-//     a.volume = 0.9; // adjust as needed
-//     pageAudio[k] = a;
-//   });
+  // Set audio properties
+  if (fireplaceSound) {
+    fireplaceSound.setVolume(0.3);
+    fireplaceSound.setLoop(true);
+  }
+  if (christmasMusic) {
+    christmasMusic.setVolume(0.5);
+    christmasMusic.setLoop(true);
+  }
+  if (doorOpenSound) {
+    doorOpenSound.setVolume(0.7);
+  }
 }
 
 
@@ -147,27 +341,93 @@ function detectColor(targetColor) { //function that when click on x, y scene/ima
 }
 
 function mousePressed() {
+  // Navigation between scenes
   if (detectColor(doorColor)) {
-    currentPageIndex = 1; // go to next scene
+    currentPageIndex = 1; // go to living room scene
+    if (doorOpenSound) doorOpenSound.play();
   }
   else if (currentPageIndex === 1 && detectColor(doorColor_livingroom)) {
     currentPageIndex = 0; // go back to town
+    if (doorOpenSound) doorOpenSound.play();
+    // Stop music when leaving living room
+    if (christmasMusic && christmasMusic.isPlaying()) {
+      christmasMusic.stop();
+      isRadioPlaying = false;
+    }
+    if (fireplaceSound && fireplaceSound.isPlaying()) {
+      fireplaceSound.stop();
+    }
+    fireplaceState = 'off';
   }
 
+  // Living room interactions
+  if (currentPageIndex === 1) {
+    // Christmas tree decoration
+    if (isNearTree(mouseX, mouseY)) {
+      let colors = [
+        color(255, 0, 0),    // Red
+        color(0, 255, 0),    // Green
+        color(0, 0, 255),    // Blue
+        color(255, 215, 0),  // Gold
+        color(255, 192, 203) // Pink
+      ];
+      let types = ['ball', 'star', 'candy'];
+
+      let ornamentColor = random(colors);
+      let ornamentType = random(types);
+      let ornament = new TreeOrnament(mouseX, mouseY, ornamentColor, ornamentType);
+      treeDecorations.push(ornament);
+
+      // Add sparkles
+      for (let i = 0; i < 5; i++) {
+        sparkles.push(new Sparkle(mouseX + random(-20, 20), mouseY + random(-20, 20)));
+      }
+    }
+
+    // Radio interaction
+    if (isNearRadio(mouseX, mouseY)) {
+      if (!isRadioPlaying) {
+        if (christmasMusic) {
+          christmasMusic.play();
+          isRadioPlaying = true;
+        }
+      } else {
+        if (christmasMusic) {
+          christmasMusic.stop();
+          isRadioPlaying = false;
+        }
+      }
+    }
+
+    // Fireplace interaction
+    if (isNearFireplace(mouseX, mouseY)) {
+      if (fireplaceState === 'off') {
+        fireplaceState = 'on';
+        if (fireplaceSound) fireplaceSound.play();
+      } else if (fireplaceState === 'on') {
+        // Extinguish fire - trigger jumpscare
+        fireplaceState = 'off';
+        if (fireplaceSound) fireplaceSound.stop();
+        showJumpscare = true;
+        jumpscareTimer = 0;
+        fireEmbers = []; // Clear embers
+      }
+    }
+  }
 }
 
 
 function drawClouds(x,y,spacing,dia){
- 
+
   push();
   translate(x,y);// using translate to move shapes together
- 
+
   fill(250, 250, 250, 150);
   circle(0,0,dia);// center puff
   circle(-spacing,0,dia);// left puff
   circle(spacing,0,dia);// right puff
   circle(0,-spacing,dia);// upper puff
- 
+
   pop();
 }
 
@@ -178,3 +438,125 @@ function updateAndDrawClouds() {
   }
 }
 
+function updateAndDrawSnowflakes() {
+  for (let flake of snowflakes) {
+    flake.update();
+    flake.display();
+  }
+}
+
+function updateAndDrawFireEmbers() {
+  // Generate new embers from fireplace area (center of room)
+  if (random(1) < 0.3) {
+    let emberX = width * 0.42 + random(-30, 30);
+    let emberY = height * 0.55 + random(-20, 20);
+    fireEmbers.push(new FireEmber(emberX, emberY));
+  }
+
+  // Update and draw embers
+  for (let i = fireEmbers.length - 1; i >= 0; i--) {
+    fireEmbers[i].update();
+    fireEmbers[i].display();
+    if (fireEmbers[i].isDead()) {
+      fireEmbers.splice(i, 1);
+    }
+  }
+}
+
+function updateAndDrawSparkles() {
+  for (let i = sparkles.length - 1; i >= 0; i--) {
+    sparkles[i].update();
+    sparkles[i].display();
+    if (sparkles[i].isDead()) {
+      sparkles.splice(i, 1);
+    }
+  }
+}
+
+function displayInteractionHints() {
+  push();
+  fill(0, 0, 0, 200);
+  textAlign(CENTER);
+  textSize(16);
+
+  // Tree hint (right side)
+  text("Click tree to decorate", width * 0.78, height * 0.15);
+
+  // Radio hint (right side, upper area)
+  let radioHint = isRadioPlaying ? "Click radio to stop music" : "Click radio for music";
+  // text(radioHint, width * 0.78, height * 0.10);
+
+  // Fireplace hint (center-left)
+  let fireplaceHint = fireplaceState === 'off' ? "Click fireplace to light" : "Click fireplace to extinguish";
+  // text(fireplaceHint, width * 0.42, height * 0.85);
+
+  pop();
+}
+
+function displayJumpscare() {
+  push();
+  // Dark overlay
+  fill(0, 0, 0, 200);
+  rect(0, 0, width, height);
+
+  // Jumpscare text (you can replace this with an image)
+  fill(255, 0, 0);
+  textAlign(CENTER, CENTER);
+  textSize(80);
+  text("HO HO HO!", width / 2, height / 2);
+
+  textSize(40);
+  fill(255);
+  text("SANTA'S WATCHING!", width / 2, height / 2 + 80);
+
+  pop();
+
+  // Timer to hide jumpscare
+  jumpscareTimer++;
+  if (jumpscareTimer > 120) { // Show for 2 seconds at 60fps
+    showJumpscare = false;
+    jumpscareTimer = 0;
+  }
+}
+
+function isNearTree(x, y) {
+  // Tree is on the right side of the living room
+  // Based on actual image positioning
+  let treeX = width * 0.76;        // Center X of tree (shifted slightly left)
+  let treeTopY = height * 0.18;    // Top of tree (star)
+  let treeBottomY = height * 0.70; // Bottom of tree (base/presents)
+  let treeBaseWidth = width * 0.10; // Half-width at base (expanded)
+
+  // Check if point is within vertical bounds
+  if (y < treeTopY || y > treeBottomY) {
+    return false;
+  }
+
+  // Calculate the allowed width at this Y position (triangular shape)
+  // Width increases linearly from top (narrow) to bottom (wide)
+  let heightRatio = (y - treeTopY) / (treeBottomY - treeTopY);
+  let allowedWidth = treeBaseWidth * heightRatio;
+
+  // Check if X is within the triangular bounds at this Y
+  return x > treeX - allowedWidth && x < treeX + allowedWidth;
+}
+
+function isNearRadio(x, y) {
+  // Radio/music control area (upper right, near ceiling lights)
+  let radioX = width * 0.78;
+  let radioY = height * 0.08;
+  let radioSize = 80;
+
+  return dist(x, y, radioX, radioY) < radioSize;
+}
+
+function isNearFireplace(x, y) {
+  // Fireplace is in the center of the room
+  let fireplaceX = width * 0.42;
+  let fireplaceY = height * 0.52;
+  let fireplaceWidth = width * 0.12;
+  let fireplaceHeight = height * 0.25;
+
+  return x > fireplaceX - fireplaceWidth / 2 && x < fireplaceX + fireplaceWidth / 2 &&
+         y > fireplaceY - fireplaceHeight / 2 && y < fireplaceY + fireplaceHeight;
+}
