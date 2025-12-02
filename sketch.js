@@ -30,6 +30,9 @@ let fireEmbers = [];
 let sparkles = [];
 let snowflakes = [];
 
+//stars
+let stars = [];
+
 class Cloud {
   constructor(x, y, speed) {
     this.x = x;
@@ -197,6 +200,38 @@ class TreeOrnament {
   }
 }
 
+//star class
+class Star {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.baseSize = random(2, 4);
+    this.twinkleSpeed = random(0.02, 0.05);
+    this.phase = random(TWO_PI);
+    this.amplitude = random(2, 6); // pulsing range
+  }
+
+  display() {
+    let pulse = sin(frameCount * this.twinkleSpeed + this.phase) * this.amplitude;
+    let starSize = this.baseSize + pulse;
+
+    // Glow layer 1: soft yellow-white
+    noStroke();
+    fill(255, 255, 200, 80); // warm glow
+    circle(this.x, this.y, starSize * 3);
+
+    // Glow layer 2: light blue to match sky
+    fill(180, 220, 255, 60); // cool blue glow
+    circle(this.x, this.y, starSize * 2);
+
+    // Core star
+    fill(255, 255, 200, 220);
+    circle(this.x, this.y, starSize);
+  }
+}
+
+
+
 // declare global var
 // to represent current page number (aka "state")
 let currentPageIndex = 0;
@@ -229,6 +264,11 @@ function preload() {
 
 function draw() {
   displayCurrentPage();
+
+  //draw stars
+  for (let star of stars) {
+    star.display();
+  }
 
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
@@ -322,6 +362,13 @@ function setup() {
   if (doorOpenSound) {
     doorOpenSound.setVolume(0.7);
   }
+
+  //setting up stars
+  for (let i = 0; i < 80; i++) { // number of stars
+  let x = random(width);
+  let y = random(height * 0.4); // only in upper sky
+  stars.push(new Star(x, y));
+}
 }
 
 
