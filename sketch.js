@@ -265,17 +265,17 @@ function preload() {
 function draw() {
   displayCurrentPage();
 
-  //draw stars
-  for (let star of stars) {
-    star.display();
-  }
-
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
     updateAndDrawClouds();
     // Add snowflakes in town scene
     updateAndDrawSnowflakes();
     displayTownText();
+
+    //draw stars
+    for (let star of stars) {
+      star.display();
+    }
   }
     // --- Hover detection for interactive objects ---
   if (currentPageIndex === 0 && detectColor(doorColor)) {
