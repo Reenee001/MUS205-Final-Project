@@ -8,7 +8,8 @@ let consequences = []; // array of lists (aka as arrays)
 let doorColor;
 let doorColor_livingroom;
 
-let clouds = [];
+let frontClouds = [];
+let distantClouds = [];
 
 // Audio variables
 let fireplaceSound;
@@ -34,29 +35,58 @@ let snowflakes = [];
 let stars = [];
 
 class Cloud {
-  constructor(x, y, speed) {
+  constructor(x, y, speed, scale = 1, alphaRange = [150, 200]) {
     this.x = x;
+    this.baseY = y;
     this.y = y;
     this.speed = speed;
+    this.scale = scale;
+    this.alpha = random(alphaRange[0], alphaRange[1]);
+
+    // Fixed random offsets to prevent shaking
+    this.spacingOffset = random(-5, 5);
+    this.diaOffset = random(-10, 10);
+    this.alphaRange = alphaRange;
+    this.floatPhase = random(TWO_PI);
   }
+
   display() {
-    fill(255);
+    // Smooth vertical floating
+    this.y = this.baseY + sin(frameCount * 0.002) * 3;
+
+    // Subtle alpha jitter
+    this.alpha += random(-1, 1);
+    this.alpha = constrain(this.alpha, this.alphaRange[0], this.alphaRange[1]);
+
+    fill(255, this.alpha);
     noStroke();
-    drawClouds(this.x, this.y, 35, 65);
-    drawClouds(this.x + 10, this.y + 10, 40, 75);
-    drawClouds(this.x - 20, this.y + 10, 40, 75);
-    drawClouds(this.x, this.y - 10, 40, 75);
-    drawClouds(this.x + 20, this.y - 10, 10, 45);
+
+    // Draw cloud
+    let spacing = 35 * this.scale + this.spacingOffset;
+    let dia = 65 * this.scale + this.diaOffset;
+
+    drawClouds(this.x, this.y, spacing, dia);
+    drawClouds(this.x + 10 * this.scale, this.y + 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x - 20 * this.scale, this.y + 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x, this.y - 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x + 20 * this.scale, this.y - 10 * this.scale, spacing / 3, dia / 2);
   }
 
   move() {
-    this.x += this.speed;
+    this.x += this.speed * random(0.90,1.10);
+
     if (this.x > width + 80) {
-      this.x = -80;
-      this.y = random(50, height / 2);
+      this.x = random(-80, -20);
+      this.baseY = random(this.baseY - 10, this.baseY +10); // vertical range
+      this.speed = this.speed;
+      this.scale = this.scale;
+      this.alpha = random(this.alphaRange[0], this.alphaRange[1]);
+      this.spacingOffset = random(-5, 5);
+      this.diaOffset = random(-10, 10);
     }
   }
 }
+
 
 class Snowflake {
   constructor(x, y) {
@@ -267,7 +297,6 @@ function draw() {
 
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
-    updateAndDrawClouds();
     // Add snowflakes in town scene
     updateAndDrawSnowflakes();
     displayTownText();
@@ -276,6 +305,8 @@ function draw() {
     for (let star of stars) {
       star.display();
     }
+    //clouds on top 
+    updateAndDrawClouds();
   }
     // --- Hover detection for interactive objects ---
   if (currentPageIndex === 0 && detectColor(doorColor)) {
@@ -337,13 +368,8 @@ function setup() {
   doorColor = color('#893f00');
   doorColor_livingroom = color('#5b3022');
 
-  // Initialize clouds
-  for (let i = 0; i < 5; i++) {
-    let xPos = random(0, width);
-    let yPos = random(50, height / 2);
-    let cloudSpeed = random(0.5, 2);
-    clouds.push(new Cloud(xPos, yPos, cloudSpeed));
-  }
+  //Call the setupClouds function
+  setupClouds();
 
   // Initialize snowflakes
   for (let i = 0; i < 50; i++) {
@@ -369,6 +395,28 @@ function setup() {
   let y = random(height * 0.4); // only in upper sky
   stars.push(new Star(x, y));
 }
+}
+function setupClouds() {
+  frontClouds = [];
+  distantClouds = [];
+
+  // Front clouds - fewer and spread vertically to prevent blotch
+  for (let i = 0; i < 12; i++) {
+    let x = random(0, width);
+    let y = random(50, 180); // narrower vertical range
+    let speed = random(0.3, 1);
+    let scale = random(0.9,1.1);
+    frontClouds.push(new Cloud(x, y, speed, 1, [150, 200]));
+  }
+
+  // Distant clouds - smaller, higher, more transparent
+  for (let i = 0; i < 6; i++) {
+    let x = random(0, width);
+    let y = random(30, 130);
+    let speed = random(0.05, 0.25);
+    let scale = random(0.6, 0.8);
+    distantClouds.push(new Cloud(x, y, speed, scale, [80, 130]));
+  }
 }
 
 
@@ -491,7 +539,7 @@ function mousePressed() {
   }
 }
 
-
+//--draw single cloud--
 function drawClouds(x,y,spacing,dia){
 
   push();
@@ -507,9 +555,15 @@ function drawClouds(x,y,spacing,dia){
 }
 
 function updateAndDrawClouds() {
-  for (let i = 0; i < clouds.length; i++) {
-    clouds[i].move();
-    clouds[i].display();
+//first draw distant clouds
+  for (let cloud of distantClouds) {
+    cloud.move();
+    cloud.display();
+  }
+//second draw front clouds on top
+  for (let cloud of frontClouds){
+    cloud.move();
+    cloud.display();
   }
 }
 
