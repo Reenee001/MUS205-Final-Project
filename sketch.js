@@ -528,11 +528,11 @@ function mousePressed() {
   // Navigation between scenes
   if (detectColor(doorColor)) {
     currentPageIndex = 1; // go to living room scene
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
   }
   else if (currentPageIndex === 1 && detectColor(doorColor_livingroom)) {
     currentPageIndex = 0; // go back to town
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
     // Stop music when leaving living room
     if (christmasMusic && christmasMusic.isPlaying()) {
       christmasMusic.stop();
