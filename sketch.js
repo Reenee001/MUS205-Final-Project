@@ -314,6 +314,7 @@ function preload() {
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
+  sparkleSound = loadSound('audio/sparkle.wav')
 }
 
 function draw() {
@@ -525,6 +526,17 @@ function detectColor(targetColor) { //function that when click on x, y scene/ima
 }
 
 function mousePressed() {
+  // Resume audio context if blocked
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+
+  // Optional: trigger music if in town scene
+  if (currentPageIndex === 0 && !townMusic.isPlaying()) {
+    townMusic.loop();
+    townMusic.setVolume(0.8);
+  }
+
   // Navigation between scenes
   if (detectColor(doorColor)) {
     currentPageIndex = 1; // go to living room scene
@@ -566,6 +578,8 @@ function mousePressed() {
       for (let i = 0; i < 5; i++) {
         sparkles.push(new Sparkle(mouseX + random(-20, 20), mouseY + random(-20, 20)));
       }
+
+      sparkleSound.play();
     }
 
     // Radio interaction
