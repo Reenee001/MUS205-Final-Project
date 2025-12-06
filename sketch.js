@@ -578,8 +578,7 @@ function mousePressed() {
       for (let i = 0; i < 5; i++) {
         sparkles.push(new Sparkle(mouseX + random(-20, 20), mouseY + random(-20, 20)));
       }
-
-      sparkleSound.play();
+      sparkleSound.play(0, 1, 0.3, 0, 2);
     }
 
     // Radio interaction
