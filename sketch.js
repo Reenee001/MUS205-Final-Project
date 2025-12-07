@@ -425,7 +425,9 @@ function preload() {
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
   sparkleSound = loadSound('audio/sparkle.wav');
+  jumpscareSound = loadSound('audio/ho_ho_ho.wav');
   santaSound = loadSound('audio/santaclaus.mp3');
+
 }
 
 function draw() {
@@ -449,9 +451,7 @@ function draw() {
 
     //clouds on top 
     updateAndDrawClouds();
-    
-    //window lights
-    displayWindowLights();
+
 
     //draw sled
     image(sledImg, sledX, sledY, sledW, sledH);
@@ -834,9 +834,6 @@ function setup() {
   //Call the setupClouds function
   setupClouds();
 
-  //window Lights
-  setupWindowLights();
-
   //sled
   sledW = 200; //its width
   sledH = sledW * (sledImg.height/ sledImg.width); //helps keep the aspect ratio 
@@ -898,26 +895,6 @@ function setupClouds() {
     let speed = random(0.05, 0.25);
     let scale = random(0.6, 0.8);
     distantClouds.push(new Cloud(x, y, speed, scale, [80, 130]));
-  }
-}
-
-function setupWindowLights(){
-    windowLights = [];
-
-   for (let win of windows) {
-    let lightsPerWindow = 20; // more lights per window
-        for (let i = 0; i < lightsPerWindow; i++) {
-            let x = win.x + random(0, win.w);
-            let y = win.y + random(0, win.h);
-            let baseBrightness = random(200, 220);
-            let size = random(3, 4);
-
-            // Each light gets a random phase for smooth twinkle
-            let phase = random(TWO_PI);
-            let speed = random(0.02, 0.06); // twinkle speed
-
-            windowLights.push({ x, y, baseBrightness, size, phase, speed });
-        }
   }
 }
 
@@ -1158,27 +1135,6 @@ function updateAndDrawClouds() {
     cloud.move();
     cloud.display();
   }
-}
-
-function displayWindowLights(){
-    for (let light of windowLights) {
-        //smooth brightness using sin wave
-        let twinkle = sin(frameCount * light.speed + light.phase) * 150;
-        let brightness = constrain(light.baseBrightness + twinkle, 150, 255);
-
-        noStroke();
-
-        //core glow
-        fill(255, 255, 200, brightness);
-        circle(light.x, light.y, light.size);
-
-        //soft halo
-        fill(255, 255, 180, brightness * 0.5);
-        circle(light.x, light.y, light.size * 4);
-
-        fill(255, 255, 150, brightness * 0.3);
-        circle(light.x, light.y, light.size * 8);
-    }
 }
 
 function updateAndDrawSnowflakes() {
