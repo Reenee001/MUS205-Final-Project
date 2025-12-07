@@ -62,8 +62,6 @@ let snowmanImg;
 let obstacles = [];
 
 let snowmanSpawn = false;
-let snowmanSpawnDelay = 10;
-let snowmanSpawnTimer = 0;
 let gameOver = false;
 
 //santa
@@ -630,20 +628,12 @@ function draw() {
             // Hill is off the screen, start spawning snowmen
             if (!snowmanSpawn) {
                 snowmanSpawn = true; // Set flag to true to prevent multiple spawns
-                snowmanSpawnTimer = 0; // Reset the timer for spawning snowmen
             }
 
-            if (snowmanSpawn){
-                snowmanSpawnTimer++;
-            }
-            
             // Handle snowman spawning after hill is off-screen
-            if (snowmanSpawnTimer >= snowmanSpawnDelay){
                 if (frameCount % 40 === 0) {
                     createSnowman(); // Call your function to create a snowman
-                    snowmanSpawnTimer = 0; //reset timer
                 }
-            }
         }
         //snowfall
         drawSnowOverlay();
@@ -662,7 +652,7 @@ function draw() {
     // Draw sled
     image(sledImg, playerX, playerY, sledW, sledH);
 
-          // MOVE + DRAW SNOWMAN
+    // MOVE + DRAW SNOWMAN
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let ob = obstacles[i];
         ob.x -= 6;
