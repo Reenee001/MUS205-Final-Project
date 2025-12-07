@@ -1016,6 +1016,10 @@ function mousePressed() {
     mouseX < santaX + santaW && mouseY > santaY && mouseY < santaY + santaH) {
    santaSliding = true;
 
+     // Play the sound once when the Santa image is clicked
+    if (!santaSound.isPlaying()) {
+      santaSound.play();
+    }
   }
 
   // Living room interactions
