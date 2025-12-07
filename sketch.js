@@ -88,6 +88,8 @@ let christmasMusic;
 let doorOpenSound;
 let jumpscareSound;
 let santaSound;
+let sleighRideSound;
+let endingSound;
 
 // Interactive objects state
 let treeDecorations = [];
@@ -427,7 +429,8 @@ function preload() {
   sparkleSound = loadSound('audio/sparkle.wav');
   jumpscareSound = loadSound('audio/ho_ho_ho.wav');
   santaSound = loadSound('audio/santaclaus.mp3');
-
+  sleighRideSound = loadSound('audio/sleighride.mp3');
+  endingSound = loadSound('audio/wonderfultime.mp3');
 }
 
 function draw() {
@@ -582,9 +585,20 @@ function draw() {
 
     //Sled Game (scene 2)
     if (currentPageIndex === 2) {
+        if (townMusic.isPlaying()) {
+            townMusic.stop(); // Stops town music
+        }
+        if (!sleighRideSound.isPlaying()) {
+            sleighRideSound.loop();  // Start the audio, and loop it during the game
+        } 
 
         // Stop everything if crashed
         if (gameOver) {
+            sleighRideSound.stop(); 
+
+        if (!endingSound.isPlaying()) {
+            endingSound.loop();  // Start the audio, and loop it during the game
+        } 
             background(30, 60, 120, 220);
 
             drawSnowOverlay();
@@ -1086,8 +1100,13 @@ function mousePressed() {
 
 // Function to return to home screen
 function goHome() {
+  hillY = 0;
   currentPageIndex = 0; // or whatever your home index is
   gameOver = false;
+
+  if (endingSound.isPlaying()) {
+    endingSound.stop();  // Stop crash sound
+  }
 
   // Reset sled/game variables if needed
   sledX = 1050;
@@ -1102,6 +1121,10 @@ function goHome() {
 function retrySledGame() {
   currentPageIndex = 2; // sledding screen
   gameOver = false;
+
+  if (endingSound.isPlaying()) {
+    endingSound.stop();  // Stop crash sound
+  }
 
   // Reset sled/game variables
   playerY = 300;
@@ -1118,6 +1141,13 @@ function retrySledGame() {
 
   // Reset background hill scroll
   hillY = 0;
+  hillSpeed = 3;
+  
+  // Reset background music
+  if (!sleighRideSound.isPlaying()) {
+    sleighRideSound.loop();
+  }
+  snowmanSpawn = false; // Reset snowman spawn flag
 }
 
 //--draw single cloud--
