@@ -589,6 +589,7 @@ function draw() {
 
             drawSnowOverlay();
 
+            push();
             textAlign(CENTER, CENTER);
 
             fill(150, 220, 255, 120);
@@ -598,6 +599,7 @@ function draw() {
             fill(180, 240, 255);
             textSize(115);
             text("❄ CRASH! ❄", width / 2, 150); // front text
+            pop();
 
             // Button dimensions
             let btnWidth = 200;
