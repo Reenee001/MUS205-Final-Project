@@ -53,7 +53,7 @@ let sledW = 70;
 let sledH = 45;
 
 let hillY = 0;
-let hillSpeed = 3;
+let hillSpeed = 7;
 
 let groundY = 350;
 
@@ -532,23 +532,24 @@ function draw() {
     // --- Hover detection for interactive objects ---
     if (currentPageIndex === 0 && detectColor(doorColor)) {
         cursor(HAND); // town door
-    } else if (currentPageIndex === 1) {
-    if (detectColor(doorColor_livingroom)) {
-      cursor(HAND); // living room door
-    } else if (isNearTree(mouseX, mouseY)) {
-      cursor(HAND); // tree
-    } else if (isNearRadio(mouseX, mouseY)) {
-      cursor(HAND); // radio
-    } else if (isNearFireplace(mouseX, mouseY)) {
-      cursor(HAND); // fireplace
-    } else {
-      cursor(ARROW); // default
-    }
     } else {
       cursor(ARROW);
      }
-  }
-
+    }else if (currentPageIndex === 1) {
+      if (detectColor(doorColor_livingroom)) {
+        cursor(HAND); // living room door
+      } else if (isNearTree(mouseX, mouseY)) {
+        cursor(HAND); // tree
+      } else if (isNearRadio(mouseX, mouseY)) {
+        cursor(HAND); // radio
+      } else if (isNearFireplace(mouseX, mouseY)) {
+        cursor(HAND); // fireplace
+      } else {
+        cursor(ARROW); // default
+      } 
+      } else {
+        cursor(ARROW); // default for other pages
+      }
 
     // Living room interactive elements (scene 1)
     if (currentPageIndex === 1) {
@@ -649,7 +650,7 @@ function draw() {
             }
 
             // Handle snowman spawning after hill is off-screen
-                if (frameCount % 40 === 0) {
+                if (frameCount % 50 === 0) {
                     createSnowman(); // Call your function to create a snowman
                 }
         }
@@ -1154,7 +1155,7 @@ function retrySledGame() {
 
   // Reset background hill scroll
   hillY = 0;
-  hillSpeed = 3;
+  hillSpeed = 7;
   
   // Reset background music
   if (!sleighRideSound.isPlaying()) {
