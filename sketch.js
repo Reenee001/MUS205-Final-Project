@@ -652,6 +652,16 @@ function draw() {
     // Draw sled
     image(sledImg, playerX, playerY, sledW, sledH);
 
+    //on screen text
+    push();
+      fill(90,90,180);
+      noStroke();
+      textSize(20);
+      textFont('Georgia');
+      text("Click spacebar to steer up", width-width*.98, height-height*.95);
+      text("Avoid snowman", width-width*.98, height-height*.90);
+    pop();
+
     // MOVE + DRAW SNOWMAN
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let ob = obstacles[i];
@@ -1356,7 +1366,16 @@ function displayTownText() {
     fill(100,100,120);
     strokeWeight(3);
     //stroke(200,200,200);
-    text("Click sled for fun", width-550, height-30);
+    text("Click sled for fun", width-width*0.3, height-height*.05);
+  pop();
+
+  push();
+    textFont('Georgia');
+    textSize(20);
+    fill(200,200,220);
+    strokeWeight(3);
+    //stroke(200,200,200);
+    text("Click Santa to help deliver presents", width-width*0.4, height-height*.75);
   pop();
 }
 
