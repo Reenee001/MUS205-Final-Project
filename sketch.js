@@ -561,10 +561,10 @@ function mousePressed() {
     // Christmas tree decoration
     if (isNearTree(mouseX, mouseY)) {
       let colors = [
-        color(255, 0, 0),    // Red
-        color(0, 255, 0),    // Green
-        color(0, 0, 255),    // Blue
-        color(255, 215, 0),  // Gold
+        color(230, 130, 130),    // Red
+        color(130, 230, 130),    // Green
+        color(130, 130, 230),    // Blue
+        color(225, 215, 90),  // Gold
         color(255, 192, 203) // Pink
       ];
       let types = ['ball', 'star', 'candy'];
