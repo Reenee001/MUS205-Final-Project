@@ -86,6 +86,16 @@ let btnHome;
 let btnRetry;
 let buttonSpacing = 50;
 
+// Gifts
+let giftBoxes = [];
+let giftImg1, giftImg2, giftImg3;
+
+  // Popup state
+  let activeGiftPopup = null;
+  let popupAlpha = 0;
+  let popupScale = 0.5;
+  let popupSizeBase = 220; // base size before scaling
+
 // Audio variables
 let fireplaceSound;
 let christmasMusic;
@@ -101,6 +111,7 @@ let isRadioPlaying = false;
 let fireplaceState = 'off'; // 'off', 'on', 'jumpscare'
 let showJumpscare = false;
 let jumpscareTimer = 0;
+
 
 // Interactive object images
 let radioImg;
@@ -390,7 +401,54 @@ class Star {
   }
 }
 
+class GiftBox {
+  constructor(x, y, size, giftImage) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.isOpened = false;
+    this.giftImage = giftImage;
+    this.popupSound = this.popupSound;
+  }
 
+  display() {
+    // Visual cue for interactivity: subtle pulse
+    let pulse = this.isOpened ? 0 : 2 * sin(frameCount * 0.1);
+    push();
+    rectMode(CORNER);
+    noStroke();
+    fill(200, 0, 0);
+    rect(this.x - pulse/2, this.y - pulse/2, this.size + pulse, this.size + pulse, 10);
+    // Ribbon
+    stroke(255);
+    strokeWeight(3);
+    line(this.x, this.y + this.size/2, this.x + this.size, this.y + this.size/2);
+    line(this.x + this.size/2, this.y, this.x + this.size/2, this.y + this.size);
+    pop();
+  }
+
+  clicked(mx, my) {
+    if (!this.isOpened &&
+        mx > this.x && mx < this.x + this.size &&
+        my > this.y && my < this.y + this.size) {
+      this.isOpened = true;
+
+      // Play unwrap click sound
+      if (sparkleSound) sparkleSound.play();
+
+      // Activate popup
+      activeGiftPopup = this.giftImage;
+
+      // Reset animation values
+      popupAlpha = 0;
+      popupScale = 0.6;
+
+      // Play this gift’s unique popup sound
+      if (this.popupSound) this.popupSound.play();
+    }
+  }
+}
+  
 
 // declare global var
 // to represent current page number (aka "state")
@@ -423,6 +481,12 @@ function preload() {
   //Load snowman image
   snowmanImg = loadImage('snowman.png');
 
+  // Load gift images
+  giftImg1 = loadImage('gift_teddy.png');
+  giftImg2 = loadImage('gift_shoes.png');
+  giftImg3 = loadImage('gift_coal.png');
+
+
   // ********************
   // Load Audio
   // ********************
@@ -435,6 +499,8 @@ function preload() {
   santaSound = loadSound('audio/santaclaus.mp3');
   sleighRideSound = loadSound('audio/sleighride.mp3');
   endingSound = loadSound('audio/wonderfultime.mp3');
+  popupSoundNormal = loadSound('audio/glitter.mp3');
+  popupSoundCoal = loadSound('audio/coal.mp3');
 }
 
 function draw() {
@@ -570,6 +636,36 @@ function draw() {
     for (let ornament of treeDecorations) {
         ornament.display();
     }
+
+    // gifts under tree
+    if (currentPageIndex === 1) {
+    // Draw interactive gifts
+    for (let box of giftBoxes) {
+      box.display();
+    }
+
+    // Animated popup
+    if (activeGiftPopup) {
+      // Animate alpha and scale
+      popupAlpha = min(popupAlpha + 12, 255);
+      popupScale = min(popupScale + 0.05, 1.0);
+
+       // Dim the scene behind the popup slightly
+      push();
+      noStroke();
+      fill(0, 0, 0, map(popupAlpha, 0, 255, 0, 120));
+      rect(0, 0, width, height);
+      pop();
+
+      // Draw popup centered
+      push();
+      imageMode(CENTER);
+      tint(255, popupAlpha);
+      const popupSize = popupSizeBase * popupScale;
+      image(activeGiftPopup, width / 2, height / 2, popupSize, popupSize);
+      pop();
+    }
+  }
 
     // Draw fireplace effects
     if (fireplaceState === 'on') {
@@ -933,6 +1029,13 @@ function setup() {
     snowflakes.push(new Snowflake(random(width), random(height)));
   }
 
+  // gift boxes
+  giftBoxes = [
+    new GiftBox(width * 0.70, height * 0.64, 54, giftImg1, popupSoundNormal),
+    new GiftBox(width * 0.74, height * 0.66, 50, giftImg2, popupSoundNormal),
+    new GiftBox(width * 0.68, height * 0.68, 58, giftImg3, popupSoundCoal)
+  ];
+
   // Set audio properties
   if (fireplaceSound) {
     fireplaceSound.setVolume(0.3);
@@ -1123,6 +1226,40 @@ function mousePressed() {
         triggerJumpscare();
 
         fireEmbers = []; // Clear embers
+      }
+    }
+
+    // Gift  interactions 
+    for (let box of giftBoxes) {
+      box.clicked(mouseX, mouseY);
+    }
+
+    // Dismiss popup by close button or outside popup area
+    if (activeGiftPopup) {
+      const popupW = popupSizeBase; // approximate hit area without scale
+      const popupH = popupSizeBase;
+      const cx = width / 2;
+      const cy = height / 2;
+
+       // Close button area (must match draw)
+      const btnX = cx + popupSizeBase * 0.6;
+      const btnY = cy - popupSizeBase * 0.6;
+      const overClose =
+        mouseX > btnX && mouseX < btnX + 40 &&
+        mouseY > btnY && mouseY < btnY + 40;
+
+      // Inside popup area check (loose box)
+      const insidePopup =
+        mouseX > cx - popupW / 2 &&
+        mouseX < cx + popupW / 2 &&
+        mouseY > cy - popupH / 2 &&
+        mouseY < cy + popupH / 2;
+
+      // If clicked the close button OR clicked outside the popup, dismiss
+      if (overClose || !insidePopup) {
+        activeGiftPopup = null;
+        popupAlpha = 0;
+        popupScale = 0.5;
       }
     }
   }
