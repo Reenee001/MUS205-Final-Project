@@ -1012,9 +1012,9 @@ function setup() {
 
   // gift boxes
   giftBoxes = [
-    new GiftBox(width * 0.70, height * 0.64, 54, giftImg1, popupSoundNormal),
-    new GiftBox(width * 0.74, height * 0.66, 50, giftImg2, popupSoundNormal),
-    new GiftBox(width * 0.68, height * 0.68, 58, giftImg3, popupSoundCoal)
+    new GiftBox(width * 0.70, height * 0.80, 70, giftImg1, popupSoundNormal),
+    new GiftBox(width * 0.79, height * 0.85, 50, giftImg2, popupSoundNormal),
+    new GiftBox(width * 0.64, height * 0.83, 58, giftImg3, popupSoundCoal)
   ];
 
   // Set audio properties
