@@ -52,6 +52,7 @@ Diana: I worked on the  moving clouds in the sky with two types, front clouds an
 🔹 4. Technical Highlights
 Show and explain:
 
+<<<<<<< HEAD
 
 The parts of your code you’re most proud of
 
@@ -66,3 +67,14 @@ One part of our code that I'm extremely proud of is the incorporation of the rei
 
 
 Transitioning from just an idea to our finished project was a generally smooth process. Not only was everyone eager to contribute new design and interactivity elements that ultimately make our project fun and keep the audience engaged, but ensuring that everyone did their part was not something that had to be discussed, as each member completed tasks and worked on elements that would allow their strengths to shine through. This made completion of the project both easy, as well as entertaining.
+=======
+The parts of your code you’re most proud of
+
+Any creative or unexpected solutions
+
+How your project evolved from idea → prototype → finished piece
+
+One part of our code that I'm extremely proud of is the incorporation of the reindeer + sled mini game on the home screen. Not only was it a very tedious and technical addition, but also provides some variation and supplemental fun to our interactivity scene. 
+
+Transitioning from just an idea to our finished project was a generally smooth process. Not only was everyone eager to contribute new design and interactivity elements that ultimately make our project fun and keep the audience engaged, but ensuring that everyone did their part was not something that had to be discussed, as each member completed tasks and worked on elements that would allow their strengths to shine through. This made completion of the project both easy, as well as entertaining. 
+>>>>>>> 65ab5ff17e3520a21432ede12494c68a588c71ad
