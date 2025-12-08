@@ -76,6 +76,7 @@ let giftImg1, giftImg2, giftImg3;
   let popupAlpha = 0;
   let popupScale = 0.5;
   let popupSizeBase = 220; // base size before scaling
+  let popupTimer = 0;
 
 // Audio variables
 let fireplaceSound;
@@ -383,13 +384,13 @@ class Star {
 }
 
 class GiftBox {
-  constructor(x, y, size, giftImage) {
+  constructor(x, y, size, giftImage, popupSound) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.isOpened = false;
     this.giftImage = giftImage;
-    this.popupSound = this.popupSound;
+    this.popupSound = popupSound;
   }
 
   display() {
@@ -409,23 +410,30 @@ class GiftBox {
   }
 
   clicked(mx, my) {
+    // Check if click is inside this gift box and it hasn't been opened yet
     if (!this.isOpened &&
         mx > this.x && mx < this.x + this.size &&
         my > this.y && my < this.y + this.size) {
+      
       this.isOpened = true;
 
-      // Play unwrap click sound
-      if (sparkleSound) sparkleSound.play();
+      // Play unwrap sparkle sound
+      if (sparkleSound) {
+        sparkleSound.play(0, 1, 0.3, 0, 2);
+      }
 
-      // Activate popup
+      // Activate popup with this gift’s image
       activeGiftPopup = this.giftImage;
 
-      // Reset animation values
+      // Reset popup animation values
       popupAlpha = 0;
       popupScale = 0.6;
+      popupTimer = 0; // optional if you want auto-hide
 
       // Play this gift’s unique popup sound
-      if (this.popupSound) this.popupSound.play();
+      if (this.popupSound) {
+        this.popupSound.play();
+      }
     }
   }
 }
@@ -619,34 +627,11 @@ function draw() {
     }
 
     // gifts under tree
-    if (currentPageIndex === 1) {
     // Draw interactive gifts
     for (let box of giftBoxes) {
       box.display();
     }
-
-    // Animated popup
-    if (activeGiftPopup) {
-      // Animate alpha and scale
-      popupAlpha = min(popupAlpha + 12, 255);
-      popupScale = min(popupScale + 0.05, 1.0);
-
-       // Dim the scene behind the popup slightly
-      push();
-      noStroke();
-      fill(0, 0, 0, map(popupAlpha, 0, 255, 0, 120));
-      rect(0, 0, width, height);
-      pop();
-
-      // Draw popup centered
-      push();
-      imageMode(CENTER);
-      tint(255, popupAlpha);
-      const popupSize = popupSizeBase * popupScale;
-      image(activeGiftPopup, width / 2, height / 2, popupSize, popupSize);
-      pop();
-    }
-  }
+  
 
     // Draw fireplace effects
     if (fireplaceState === 'on') {
@@ -847,7 +832,9 @@ function draw() {
         }
     }
 }
-    
+  if (activeGiftPopup) {
+    displayGiftPopup();
+  }
 }
  
 function createSnowman() {
@@ -1210,40 +1197,42 @@ function mousePressed() {
       }
     }
 
-    // Gift  interactions 
+  // Gift interactions
+if (currentPageIndex === 1) {
+  if (!activeGiftPopup) {
+    // Only allow opening gifts if no popup is currently active
     for (let box of giftBoxes) {
       box.clicked(mouseX, mouseY);
     }
+  } else {
+    // Only allow dismissal if popup is already open
+    const popupW = popupSizeBase;
+    const popupH = popupSizeBase;
+    const cx = width / 2;
+    const cy = height / 2;
 
-    // Dismiss popup by close button or outside popup area
-    if (activeGiftPopup) {
-      const popupW = popupSizeBase; // approximate hit area without scale
-      const popupH = popupSizeBase;
-      const cx = width / 2;
-      const cy = height / 2;
+    const btnX = cx + popupSizeBase * 0.6;
+    const btnY = cy - popupSizeBase * 0.6;
+    const overClose =
+      mouseX > btnX && mouseX < btnX + 40 &&
+      mouseY > btnY && mouseY < btnY + 40;
 
-       // Close button area (must match draw)
-      const btnX = cx + popupSizeBase * 0.6;
-      const btnY = cy - popupSizeBase * 0.6;
-      const overClose =
-        mouseX > btnX && mouseX < btnX + 40 &&
-        mouseY > btnY && mouseY < btnY + 40;
+    const insidePopup =
+      mouseX > cx - popupW / 2 && mouseX < cx + popupW / 2 &&
+      mouseY > cy - popupH / 2 && mouseY < cy + popupH / 2;
 
-      // Inside popup area check (loose box)
-      const insidePopup =
-        mouseX > cx - popupW / 2 &&
-        mouseX < cx + popupW / 2 &&
-        mouseY > cy - popupH / 2 &&
-        mouseY < cy + popupH / 2;
-
-      // If clicked the close button OR clicked outside the popup, dismiss
-      if (overClose || !insidePopup) {
-        activeGiftPopup = null;
-        popupAlpha = 0;
-        popupScale = 0.5;
-      }
+    if (overClose || !insidePopup) {
+      activeGiftPopup = null;
+      popupAlpha = 0;
+      popupScale = 0.5;
     }
   }
+}
+
+  
+
+}
+  
   
 
   // Check if game over screen is active
@@ -1573,4 +1562,41 @@ function triggerJumpscare() {
     jumpscareSound.setVolume(0.7); // safe volume
     jumpscareSound.play();         // play once
   }
+}
+
+function displayGiftPopup() {
+  popupAlpha = min(popupAlpha + 12, 255);
+  popupScale = min(popupScale + 0.05, 1.0);
+
+  push();
+  // Dim background
+  noStroke();
+  fill(0, 0, 0, map(popupAlpha, 0, 255, 0, 180));
+  rect(0, 0, width, height);
+
+  // Draw popup image
+  imageMode(CENTER);
+  tint(255, popupAlpha);
+  const popupSize = popupSizeBase * popupScale;
+  image(activeGiftPopup, width / 2, height / 2, popupSize, popupSize);
+
+  // --- Draw Close Button ---
+  const btnX = width / 2 + popupSize * 0.6;
+  const btnY = height / 2 - popupSize * 0.6;
+  const btnSize = 40;
+
+  // Glow effect
+  stroke(255, 100, 100, 200);
+  strokeWeight(4);
+  fill(255, 0, 0, 180);
+  rect(btnX, btnY, btnSize, btnSize, 8);
+
+  // "X" text
+  fill(255);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(24);
+  text("X", btnX + btnSize / 2, btnY + btnSize / 2);
+
+  pop();
 }
